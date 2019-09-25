@@ -1,0 +1,10 @@
+﻿<Application x:Class="Ravenfall.Updater.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Ravenfall.Updater"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <FontFamily x:Key="Rodin">pack://application:,,,/Fonts/#FOT-Rodin Pro M</FontFamily>
+        <FontFamily x:Key="RodinLight">pack://application:,,,/Fonts/#FOT-Rodin Pro L</FontFamily>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29306.81
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenWeave", "src\RavenWeave.csproj", "{C5F43A2D-272B-4C97-A92D-89F533D65FB0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C5F43A2D-272B-4C97-A92D-89F533D65FB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5F43A2D-272B-4C97-A92D-89F533D65FB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5F43A2D-272B-4C97-A92D-89F533D65FB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5F43A2D-272B-4C97-A92D-89F533D65FB0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4547661A-C138-48DE-BA00-30E37A2B1C03}
+	EndGlobalSection
+EndGlobal

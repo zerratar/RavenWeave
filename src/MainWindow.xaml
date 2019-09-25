@@ -1,0 +1,32 @@
+﻿<Window x:Class="Ravenfall.Updater.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Ravenfall.Updater"
+        xmlns:vm="clr-namespace:Ravenfall.Updater.ViewModels"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="166" Width="624"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" Topmost="True"
+        d:DataContext="{x:Static vm:MainViewModel.DesignInstance}">
+    <Border BorderBrush="#FFF0F0F0" BorderThickness="4">
+        <Grid Background="#FFFDFDFD">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,8,0,92" FontSize="18" FontFamily="{StaticResource Rodin}" Foreground="#FF5B5858" Text="{Binding Path=Message}"></TextBlock>
+            <ProgressBar BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="30" Margin="25,77,25,51" Value="{Binding Path=UpdateProgress}" Background="#FFF1EDED" Foreground="#FF89B006"></ProgressBar>
+            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Margin="25,116,0,14" FontSize="14" FontFamily="{StaticResource RodinLight}" Foreground="#FF615C5C">
+                <TextBlock.Inlines>
+                    <Run>OLD VERSION :</Run>
+                    <Run Text="{Binding Path=OldVersionName}"></Run>
+                </TextBlock.Inlines>
+            </TextBlock>
+            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,116,25,14" FontSize="14" FontFamily="{StaticResource RodinLight}" Foreground="#FF615C5C">
+                <TextBlock.Inlines>
+                    <Run>NEW VERSION :</Run>
+                    <Run Text="{Binding Path=NewVersionName}"></Run>
+                </TextBlock.Inlines>                                
+            </TextBlock>
+        </Grid>
+    </Border>
+</Window>
