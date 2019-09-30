@@ -40,6 +40,11 @@ namespace Ravenfall.Updater.ViewModels
             // restart, whatnot
         }
 
+        internal void Start()
+        {
+            this.updater.Start();
+        }
+
         private void UpdateView(GameUpdateChangedEventArgs e)
         {
             this.Message = e.Message;

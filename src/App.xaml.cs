@@ -25,13 +25,13 @@ namespace Ravenfall.Updater
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            var args = e.Args;
-            if (args == null || args.Length == 0)
-            {
-                MessageBox.Show("Patcher can only be started by Ravenfall.");
-                this.Shutdown();
-                return;
-            }
+            //var args = e.Args;
+            //if (args == null || args.Length == 0)
+            //{
+            //    MessageBox.Show("Patcher can only be started by Ravenfall.");
+            //    this.Shutdown();
+            //    return;
+            //}
         }
 
         private void RegisterModels()

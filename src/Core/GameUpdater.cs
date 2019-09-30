@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 
 namespace Ravenfall.Updater.Core
@@ -49,8 +50,6 @@ namespace Ravenfall.Updater.Core
                 return;
             }
 
-            await UnpackUpdateIfNecessaryAsync(appFolder);
-
             var updateFolder = await FindUpdateFolderAsync();
             if (string.IsNullOrEmpty(updateFolder))
             {
@@ -67,27 +66,30 @@ namespace Ravenfall.Updater.Core
                 return;
             }
 
+            await UnpackUpdateIfNecessaryAsync(appFolder, newVersion);
+
             if (await ReplaceFilesAsync(newVersion, currentVersion, updateFolder, appFolder))
             {
                 await NotifyUpdateProgress(newVersion, currentVersion, MSG_UPDATE_COMPLETED, 1f);
                 System.Diagnostics.Process.Start("ravenfall.exe");
+                this.dispatcher.BeginInvoke((Action)(() => { try { Application.Current?.Shutdown(); } catch { try { System.Diagnostics.Process.GetCurrentProcess().Kill(); } catch { } } }));
                 return;
             }
 
             await NotifyUpdateProgress(newVersion, currentVersion, MSG_UPDATE_FAILED, 0);
         }
 
-        private async Task UnpackUpdateIfNecessaryAsync(string appFolder)
+        private async Task UnpackUpdateIfNecessaryAsync(string appFolder, string newVersion)
         {
             var updatePackage = Directory.GetFiles(appFolder, "update.zip", System.IO.SearchOption.AllDirectories).FirstOrDefault();
-            if (!string.IsNullOrEmpty(updatePackage))
+            if (string.IsNullOrEmpty(updatePackage))
             {
                 return;
             }
             var currentVersion = GetCurrentVersion();
             await UnZipAsync(updatePackage, Path.Combine(appFolder, "update", "unpacked"), async file =>
             {
-                await NotifyUpdateProgress("-", currentVersion, MSG_UNPACKING_FILE + file, 1f);
+                await NotifyUpdateProgress(newVersion, currentVersion, MSG_UNPACKING_FILE + file, 1f);
             });
         }
 
@@ -95,14 +97,15 @@ namespace Ravenfall.Updater.Core
         {
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(destDirPath));
+                if (!Directory.Exists(destDirPath))
+                    Directory.CreateDirectory(destDirPath);
                 using (var zipIn = new ZipInputStream(File.OpenRead(srcDirPath)))
                 {
                     ZipEntry entry;
 
                     while ((entry = zipIn.GetNextEntry()) != null)
                     {
-                        string dirPath = Path.GetDirectoryName(destDirPath + entry.Name);
+                        string dirPath = Path.GetDirectoryName(System.IO.Path.Combine(destDirPath, entry.Name));
 
                         if (!Directory.Exists(dirPath))
                         {
@@ -111,7 +114,7 @@ namespace Ravenfall.Updater.Core
 
                         if (!entry.IsDirectory)
                         {
-                            using (var streamWriter = File.Create(destDirPath + entry.Name))
+                            using (var streamWriter = File.Create(System.IO.Path.Combine(destDirPath, entry.Name)))
                             {
                                 int size = 2048;
                                 byte[] buffer = new byte[size];
@@ -125,8 +128,6 @@ namespace Ravenfall.Updater.Core
                         }
                     }
                 }
-
-                System.IO.File.Delete(srcDirPath);
             }
             catch (System.Threading.ThreadAbortException lException)
             {
@@ -164,20 +165,21 @@ namespace Ravenfall.Updater.Core
             await CloseRavenfallAsync(newVersion, oldVersion);
 
             var files = System.IO.Directory.GetFiles(sourcePath, "*.*", System.IO.SearchOption.AllDirectories);
-            try
+
+            for (var i = 0; i < files.Length; ++i)
             {
-                for (var i = 0; i < files.Length; ++i)
+                try
                 {
                     var file = files[i];
                     ReplaceFile(file, destinationPath);
-                    await NotifyUpdateProgress(newVersion, oldVersion, MSG_UPDATE, (float)i / files.Length);
                 }
-                return true;
+                catch (Exception exc)
+                {
+                }
+                await NotifyUpdateProgress(newVersion, oldVersion, MSG_UPDATE, (float)i / files.Length);
             }
-            catch
-            {
-                return false;
-            }
+            return true;
+
         }
 
         private async Task CloseRavenfallAsync(string newVersion, string oldVersion)
@@ -197,19 +199,43 @@ namespace Ravenfall.Updater.Core
             }
         }
 
-        private void ReplaceFile(string file, string destinationPath)
+        private void ReplaceFile(string sourceFile, string destinationPath)
         {
-            var replacePath = Path.Combine(destinationPath, "update", "unpacked");
-            var backupPath = Path.Combine(destinationPath, "update", "backup");
-            var backupFilePath = file.Replace(backupPath, file);
-            var targetFilePath = file.Replace(replacePath, file);
+            var additional = sourceFile.Replace(Path.Combine(destinationPath, "update", "unpacked"), "");
+            var targetPath = destinationPath + additional;
+            var backupPath = destinationPath + "\\backup" + additional;
+            //var replacePath = Path.Combine(destinationPath, "update", "unpacked");
+            //var backupPath = Path.Combine(destinationPath, "update", "backup");
+            //var fileDir = Path.GetDirectoryName(sourceFile);
+            //var fileName = Path.GetFileName(sourceFile);
+            //var backupFilePath = Path.Combine(sourceFile.Replace(fileDir, backupPath));
+            //var targetFilePath = Path.Combine(sourceFile.Replace(fileDir, destinationPath));
 
-            if (File.Exists(backupFilePath))
+            if (sourceFile.Contains("update.json") || sourceFile.Contains("update.zip"))
             {
-                File.Delete(backupFilePath);
+                return;
             }
 
-            File.Replace(file, targetFilePath, backupFilePath);
+            var backupDir = System.IO.Path.GetDirectoryName(backupPath);
+            if (!System.IO.Directory.Exists(backupDir))
+            {
+                System.IO.Directory.CreateDirectory(backupDir);
+            }
+
+            var targetDir = System.IO.Path.GetDirectoryName(targetPath);
+            if (!System.IO.Directory.Exists(targetDir))
+            {
+                System.IO.Directory.CreateDirectory(targetDir);
+            }
+
+            if (System.IO.File.Exists(sourceFile))
+            {
+                if (System.IO.File.Exists(targetPath))
+                {
+                    File.Copy(targetPath, backupPath, true);
+                }
+                File.Copy(sourceFile, targetPath, true);
+            }
 
             // file: c:\something\ravenfall\update\unpacked\update.json
             // file: c:\something\ravenfall\update\unpacked\data\test
