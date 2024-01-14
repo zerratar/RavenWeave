@@ -13,6 +13,10 @@
         d:DataContext="{x:Static vm:MainViewModel.DesignInstance}">
     <Border BorderBrush="#FFF0F0F0" BorderThickness="4">
         <Grid Background="#FFFDFDFD">
+
+
+            <!--<Button Margin="0,0,447,115" Click="Button_Click">Click me plx</Button>-->
+            
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,8,0,92" FontSize="18" FontFamily="{StaticResource Rodin}" Foreground="#FF5B5858" Text="{Binding Path=Message}"></TextBlock>
             <ProgressBar BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="30" Margin="25,77,25,51" Value="{Binding Path=UpdateProgress}" Background="#FFF1EDED" Foreground="#FF89B006"></ProgressBar>
             <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Margin="25,116,0,14" FontSize="14" FontFamily="{StaticResource RodinLight}" Foreground="#FF615C5C">
@@ -25,7 +29,7 @@
                 <TextBlock.Inlines>
                     <Run>NEW VERSION :</Run>
                     <Run Text="{Binding Path=NewVersionName}"></Run>
-                </TextBlock.Inlines>                                
+                </TextBlock.Inlines>
             </TextBlock>
         </Grid>
     </Border>

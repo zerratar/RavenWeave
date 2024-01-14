@@ -27,5 +27,10 @@ namespace Ravenfall.Updater
             var app = App.Current as Ravenfall.Updater.App;
             DataContext = app.IoC.Resolve<MainViewModel>();
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            (DataContext as MainViewModel).Start();
+        }
     }
 }

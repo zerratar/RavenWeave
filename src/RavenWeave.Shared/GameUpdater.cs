@@ -3,12 +3,30 @@ using RavenWeave.Core;
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 
 namespace Ravenfall.Updater.Core
 {
+    public interface IActionDispatcher
+    {
+        Task BeginInvoke(Action action);
+    }
+
+
+    public static class OperatingSystem
+    {
+        public static bool IsWindows() =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+        public static bool IsMacOS() =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
+        public static bool IsLinux() =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+    }
+
     public class GameUpdater : IGameUpdater
     {
         private const string MSG_PREP_FINDAPPFOLDER = "Looking for app folder...";
@@ -21,7 +39,7 @@ namespace Ravenfall.Updater.Core
         private const string MSG_UPDATE_FAILED_NOUPDATE = "Update failed. No update has been downloaded. Restart Ravenfall and try again.";
         private const string MSG_WAITING_FOR_RAVENFALL = "Waiting for Ravenfall to exit...";
         private readonly GameUpdateUnpacker unpacker;
-        private readonly Dispatcher dispatcher;
+        private readonly IActionDispatcher dispatcher;
 
         private string metaFile;
         private string updateFile;
@@ -31,7 +49,7 @@ namespace Ravenfall.Updater.Core
         public event EventHandler<GameUpdateChangedEventArgs> StatusChanged;
         public event EventHandler<GameUpdateChangedEventArgs> UpdateCompleted;
 
-        public GameUpdater(GameUpdateUnpacker unpacker, Dispatcher dispatcher)
+        public GameUpdater(GameUpdateUnpacker unpacker, IActionDispatcher dispatcher)
         {
             this.unpacker = unpacker;
             this.dispatcher = dispatcher;
@@ -73,12 +91,27 @@ namespace Ravenfall.Updater.Core
             if (await ReplaceFilesAsync(newVersion, currentVersion, updateFolder, appFolder))
             {
                 await NotifyUpdateProgress(newVersion, currentVersion, MSG_UPDATE_COMPLETED, 1f);
-                System.Diagnostics.Process.Start("ravenfall.exe");
-                this.dispatcher.BeginInvoke((Action)(() => { try { Application.Current?.Shutdown(); } catch { try { System.Diagnostics.Process.GetCurrentProcess().Kill(); } catch { } } }));
+
+                if (OperatingSystem.IsLinux())
+                {
+                    System.Diagnostics.Process.Start("ravenfall.x86_64");
+                }
+                else
+                {
+                    System.Diagnostics.Process.Start("ravenfall.exe");
+                }
+
+                await this.dispatcher.BeginInvoke(Shutdown);
                 return;
             }
 
             await NotifyUpdateProgress(newVersion, currentVersion, MSG_UPDATE_FAILED, 0);
+        }
+
+        private void Shutdown()
+        {
+            try { Environment.Exit(0); }
+            catch { try { System.Diagnostics.Process.GetCurrentProcess().Kill(); } catch { } }
         }
 
         private async Task UnpackUpdateIfNecessaryAsync(string appFolder, string newVersion)
@@ -146,14 +179,14 @@ namespace Ravenfall.Updater.Core
                 await NotifyUpdateProgress(newVersion, oldVersion, MSG_UPDATE, (float)i / files.Length);
             }
             return true;
-
         }
 
         private async Task CloseRavenfallAsync(string newVersion, string oldVersion)
         {
             try
             {
-                var ravenfallProcess = System.Diagnostics.Process.GetProcesses().FirstOrDefault(x => x.ProcessName.IndexOf("ravenfall.exe", StringComparison.OrdinalIgnoreCase) >= 0);
+                var ravenfallProcess = System.Diagnostics.Process.GetProcesses()
+                    .FirstOrDefault(x => x.ProcessName.IndexOf("ravenfall", StringComparison.OrdinalIgnoreCase) >= 0);
                 if (ravenfallProcess != null && !ravenfallProcess.HasExited)
                 {
                     await NotifyUpdateProgress(newVersion, oldVersion, MSG_WAITING_FOR_RAVENFALL, 0);
@@ -209,7 +242,7 @@ namespace Ravenfall.Updater.Core
             // destinationPath: c:\something\ravenfall\
         }
 
-        private DispatcherOperation NotifyUpdateProgress(string newVersion, string oldVersion, string messageUpdate, float progress)
+        private Task NotifyUpdateProgress(string newVersion, string oldVersion, string messageUpdate, float progress)
         {
             return dispatcher.BeginInvoke((Action)(() =>
             {

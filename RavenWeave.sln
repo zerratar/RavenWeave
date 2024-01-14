@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29306.81
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenWeave", "src\RavenWeave.csproj", "{C5F43A2D-272B-4C97-A92D-89F533D65FB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenWeave.WPF", "src\RavenWeave.WPF\RavenWeave.WPF.csproj", "{C5F43A2D-272B-4C97-A92D-89F533D65FB0}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RavenWeave.Shared", "src\RavenWeave.Shared\RavenWeave.Shared.shproj", "{B4603F65-5544-49EF-BA4A-30A48DF87E0B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RavenWeave", "src\RavenWeave\RavenWeave.csproj", "{8FBAD6B7-C9BA-4FC8-8558-E42FA7693CDE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,11 +19,20 @@ Global
 		{C5F43A2D-272B-4C97-A92D-89F533D65FB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5F43A2D-272B-4C97-A92D-89F533D65FB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5F43A2D-272B-4C97-A92D-89F533D65FB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FBAD6B7-C9BA-4FC8-8558-E42FA7693CDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FBAD6B7-C9BA-4FC8-8558-E42FA7693CDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FBAD6B7-C9BA-4FC8-8558-E42FA7693CDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FBAD6B7-C9BA-4FC8-8558-E42FA7693CDE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4547661A-C138-48DE-BA00-30E37A2B1C03}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\RavenWeave.Shared\RavenWeave.Shared.projitems*{8fbad6b7-c9ba-4fc8-8558-e42fa7693cde}*SharedItemsImports = 5
+		src\RavenWeave.Shared\RavenWeave.Shared.projitems*{b4603f65-5544-49ef-ba4a-30a48df87e0b}*SharedItemsImports = 13
+		src\RavenWeave.Shared\RavenWeave.Shared.projitems*{c5f43a2d-272b-4c97-a92d-89f533d65fb0}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

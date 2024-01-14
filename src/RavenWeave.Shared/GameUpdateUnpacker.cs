@@ -37,7 +37,7 @@ namespace RavenWeave.Core
                     throw new NotImplementedException($"The archive extension: {Path.GetExtension(srcFilePath)?.ToLower()} has not yet been implemented.");
             }
         }
-        
+
         private async Task<bool> DecompressArchive(
             string srcFilePath,
             string destDirPath,
@@ -88,6 +88,19 @@ namespace RavenWeave.Core
             string directory,
             Action<string> onUnzipped)
         {
+
+            if (entry.IsDirectory)
+            {
+                var targetDir = Path.Combine(directory, entry.Key);
+                var dirInfo = new DirectoryInfo(targetDir);
+                if (dirInfo != null && !dirInfo.Exists)
+                {
+                    dirInfo.Create();
+                }
+
+                return new EntryUnpackResult(null, dirInfo.Name);
+            }
+
             var ext = Path.GetExtension(entry.Key);
             var targetFile = Path.Combine(directory, Path.ChangeExtension(entry.Key.Replace("?", ""), ext));
             var dir = new FileInfo(targetFile).Directory;

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>b4603f65-5544-49ef-ba4a-30a48df87e0b</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>RavenWeave.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)GameUpdateChangedEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameUpdater.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameUpdateUnpacker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IGameUpdater.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IoC.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MetaData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UpdateData.cs" />
+  </ItemGroup>
+</Project>

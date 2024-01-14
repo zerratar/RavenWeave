@@ -1,16 +1,13 @@
 ﻿using Ravenfall.Updater.Core;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Threading;
+using System.Windows;
 
 namespace Ravenfall.Updater.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
         private readonly IGameUpdater updater;
+        private readonly IKernel kernel;
 
         #region Property Fields
         private string oldVersionName;
@@ -19,9 +16,10 @@ namespace Ravenfall.Updater.ViewModels
         private string message;
         #endregion
 
-        public MainViewModel(IGameUpdater updater)
+        public MainViewModel(IGameUpdater updater, IKernel kernel)
         {
             this.updater = updater;
+            this.kernel = kernel;
             this.updater.StatusChanged += Updater_StatusChanged;
             this.updater.UpdateCompleted += Updater_UpdateCompleted;
             this.updater.Start();
@@ -36,6 +34,16 @@ namespace Ravenfall.Updater.ViewModels
         private void Updater_StatusChanged(object sender, GameUpdateChangedEventArgs e)
         {
             UpdateView(e);
+
+            if (e.Message.IndexOf("failed", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                this.kernel.SetTimeout(() =>
+                {
+                    Application.Current.Shutdown();
+                }, 4000);
+            }
+
+
             // shutdown
             // restart, whatnot
         }
@@ -81,7 +89,7 @@ namespace Ravenfall.Updater.ViewModels
 
         #endregion
 
-        public static MainViewModel DesignInstance => new MainViewModel(null)
+        public static MainViewModel DesignInstance => new MainViewModel(null, null)
         {
             Message = "Test",
             UpdateProgress = 46f,

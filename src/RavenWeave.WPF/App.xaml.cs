@@ -1,5 +1,7 @@
 ﻿using Ravenfall.Updater.Core;
 using Ravenfall.Updater.ViewModels;
+using RavenWeave;
+using RavenWeave.Core;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -38,8 +40,12 @@ namespace Ravenfall.Updater
         {
 
             IoC
-                .RegisterCustomShared<System.Windows.Threading.Dispatcher>(() => Dispatcher)
+                .RegisterShared<IKernel, Kernel>()
+                .RegisterCustomShared<IActionDispatcher>(() => new ThreadDispatcher(Dispatcher))
+
                 .Register<IGameUpdater, GameUpdater>()
+                .Register<GameUpdateUnpacker, GameUpdateUnpacker>()
+
                 // View Models
                 .Register<MainViewModel, MainViewModel>();
         }
