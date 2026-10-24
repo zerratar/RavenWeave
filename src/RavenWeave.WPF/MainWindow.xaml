@@ -3,34 +3,151 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Ravenfall.Updater"
         xmlns:vm="clr-namespace:Ravenfall.Updater.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="166" Width="624"
-        WindowStyle="None"
-        ResizeMode="NoResize"
-        WindowStartupLocation="CenterScreen" Topmost="True"
+        Title="Ravenfall Updater" FontFamily="Segoe UI"
+        Width="600" SizeToContent="Height"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Topmost="True"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display"
+        MouseLeftButtonDown="OnDrag"
         d:DataContext="{x:Static vm:MainViewModel.DesignInstance}">
-    <Border BorderBrush="#FFF0F0F0" BorderThickness="4">
-        <Grid Background="#FFFDFDFD">
 
+    <!--
+      The game's colours (ravenfall-tokens.uss): near black, gold accent, warm text. Every text either wraps or ends in
+      an ellipsis, and the window grows to its content, so nothing is cut off whatever the message.
+    -->
+    <Window.Resources>
+        <SolidColorBrush x:Key="Surface" Color="#14120F" />
+        <SolidColorBrush x:Key="Raised" Color="#2B2720" />
+        <SolidColorBrush x:Key="Border" Color="#3A352C" />
+        <SolidColorBrush x:Key="Accent" Color="#E8A33D" />
+        <SolidColorBrush x:Key="AccentBright" Color="#FFC26A" />
+        <SolidColorBrush x:Key="Text" Color="#FFF4D6" />
+        <SolidColorBrush x:Key="TextDim" Color="#A79E8A" />
+        <SolidColorBrush x:Key="TextFaint" Color="#706B5B" />
+        <SolidColorBrush x:Key="Danger" Color="#E5484D" />
+        <BooleanToVisibilityConverter x:Key="Visible" />
 
-            <!--<Button Margin="0,0,447,115" Click="Button_Click">Click me plx</Button>-->
-            
-            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,8,0,92" FontSize="18" FontFamily="{StaticResource Rodin}" Foreground="#FF5B5858" Text="{Binding Path=Message}"></TextBlock>
-            <ProgressBar BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="30" Margin="25,77,25,51" Value="{Binding Path=UpdateProgress}" Background="#FFF1EDED" Foreground="#FF89B006"></ProgressBar>
-            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Margin="25,116,0,14" FontSize="14" FontFamily="{StaticResource RodinLight}" Foreground="#FF615C5C">
-                <TextBlock.Inlines>
-                    <Run>OLD VERSION :</Run>
-                    <Run Text="{Binding Path=OldVersionName}"></Run>
-                </TextBlock.Inlines>
-            </TextBlock>
-            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,116,25,14" FontSize="14" FontFamily="{StaticResource RodinLight}" Foreground="#FF615C5C">
-                <TextBlock.Inlines>
-                    <Run>NEW VERSION :</Run>
-                    <Run Text="{Binding Path=NewVersionName}"></Run>
-                </TextBlock.Inlines>
-            </TextBlock>
+        <Style x:Key="Bar" TargetType="ProgressBar">
+            <Setter Property="Height" Value="10" />
+            <Setter Property="Minimum" Value="0" />
+            <Setter Property="Maximum" Value="100" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border CornerRadius="5" Background="{StaticResource Raised}" />
+                            <Border x:Name="PART_Track" />
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="5">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Color="#9E6E28" Offset="0" />
+                                        <GradientStop Color="#E8A33D" Offset="0.7" />
+                                        <GradientStop Color="#FFC26A" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="Button" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource Text}" />
+            <Setter Property="Background" Value="{StaticResource Raised}" />
+            <Setter Property="BorderBrush" Value="#5A5244" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Box" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource Accent}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource Button}">
+            <Setter Property="Foreground" Value="#14120F" />
+            <Setter Property="Background" Value="{StaticResource Accent}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBright}" />
+        </Style>
+    </Window.Resources>
+
+    <Border Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="10" Margin="12">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="18" ShadowDepth="0" Opacity="0.55" Color="Black" />
+        </Border.Effect>
+        <Grid>
+            <!-- the gold edge along the top, as on the game's windows -->
+            <Border Height="3" VerticalAlignment="Top" CornerRadius="10,10,0,0" Background="{StaticResource Accent}" />
+
+            <StackPanel Margin="28,26,28,22">
+                <Grid Margin="0,0,0,18">
+                    <Image Source="logo.png" Height="60" HorizontalAlignment="Left" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock Text="{Binding VersionText}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDim}" FontSize="13" TextTrimming="CharacterEllipsis" MaxWidth="260" />
+                </Grid>
+
+                <TextBlock Text="{Binding Message}" Foreground="{StaticResource Text}" FontSize="19" FontWeight="SemiBold"
+                           TextWrapping="Wrap" Margin="0,0,0,6" />
+
+                <!-- the file being worked on, or what to do after a failure -->
+                <TextBlock Text="{Binding Detail}" FontSize="12.5" Margin="0,0,0,14" TextTrimming="CharacterEllipsis">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource TextFaint}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                    <Setter Property="TextTrimming" Value="None" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <ProgressBar Style="{StaticResource Bar}" Value="{Binding UpdateProgress, Mode=OneWay}" />
+                    <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource TextDim}" FontSize="12.5"
+                               Margin="0,8,0,0" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <!-- after a failure: what the streamer can do about it -->
+                <Grid Visibility="{Binding IsFailed, Converter={StaticResource Visible}}" Margin="0,4,0,0">
+                    <Border Height="2" VerticalAlignment="Top" Background="{StaticResource Danger}" CornerRadius="1" Margin="0,0,0,14" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="-8,16,0,0">
+                        <Button Style="{StaticResource Button}" Content="Open log" Command="{Binding OpenLogCommand}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Style="{StaticResource Button}" Content="Start Ravenfall anyway" Command="{Binding StartGameCommand}" />
+                        <Button Style="{StaticResource PrimaryButton}" Content="Retry" Command="{Binding RetryCommand}" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
         </Grid>
     </Border>
 </Window>

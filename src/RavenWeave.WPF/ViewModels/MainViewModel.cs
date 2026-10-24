@@ -1,64 +1,99 @@
 ﻿using Ravenfall.Updater.Core;
 using System;
-using System.Windows;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Windows.Input;
 
 namespace Ravenfall.Updater.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
         private readonly IGameUpdater updater;
-        private readonly IKernel kernel;
 
-        #region Property Fields
-        private string oldVersionName;
-        private string newVersionName;
+        private string message = "Getting ready...";
+        private string detail;
         private float updateProgress;
-        private string message;
-        #endregion
+        private string progressText;
+        private string versionText;
+        private bool isFailed;
+        private bool isDone;
 
         public MainViewModel(IGameUpdater updater, IKernel kernel)
         {
             this.updater = updater;
-            this.kernel = kernel;
-            this.updater.StatusChanged += Updater_StatusChanged;
-            this.updater.UpdateCompleted += Updater_UpdateCompleted;
-            this.updater.Start();
-        }
-
-
-        private void Updater_UpdateCompleted(object sender, GameUpdateChangedEventArgs e)
-        {
-            UpdateView(e);
-        }
-
-        private void Updater_StatusChanged(object sender, GameUpdateChangedEventArgs e)
-        {
-            UpdateView(e);
-
-            if (e.Message.IndexOf("failed", StringComparison.OrdinalIgnoreCase) >= 0)
+            RetryCommand = new RelayCommand(() =>
             {
-                this.kernel.SetTimeout(() =>
-                {
-                    Application.Current.Shutdown();
-                }, 4000);
-            }
+                IsFailed = false;
+                Message = "Trying again...";
+                updater.Retry();
+            });
+            StartGameCommand = new RelayCommand(() => updater.StartGameAndExit());
+            OpenLogCommand = new RelayCommand(OpenLog);
+            CloseCommand = new RelayCommand(() => System.Windows.Application.Current.Shutdown());
 
-
-            // shutdown
-            // restart, whatnot
+            if (updater == null) return; // the designer
+            updater.StatusChanged += (s, e) => UpdateView(e);
+            updater.UpdateCompleted += (s, e) => UpdateView(e);
+            updater.Start();
         }
 
-        internal void Start()
-        {
-            this.updater.Start();
-        }
+        public ICommand RetryCommand { get; }
+        public ICommand StartGameCommand { get; }
+        public ICommand OpenLogCommand { get; }
+        public ICommand CloseCommand { get; }
 
         private void UpdateView(GameUpdateChangedEventArgs e)
         {
-            this.Message = e.Message;
-            this.UpdateProgress = e.Progress;
-            this.OldVersionName = e.OldVersion;
-            this.NewVersionName = e.NewVersion;
+            Message = e.Message;
+            Detail = e.Detail;
+            UpdateProgress = e.Progress;
+            IsFailed = e.Phase == UpdatePhase.Failed;
+            IsDone = e.Phase == UpdatePhase.Done;
+            VersionText = Versions(e.OldVersion, e.NewVersion);
+
+            if (IsFailed)
+            {
+                ProgressText = null;
+            }
+            else if (e.BytesTotal > 0)
+            {
+                ProgressText = string.Format(CultureInfo.InvariantCulture, "{0:0}%   {1} of {2}", e.Progress, Size(e.BytesDone), Size(e.BytesTotal));
+            }
+            else
+            {
+                ProgressText = string.Format(CultureInfo.InvariantCulture, "{0:0}%", e.Progress);
+            }
+        }
+
+        private static string Versions(string oldVersion, string newVersion)
+        {
+            var hasOld = !string.IsNullOrEmpty(oldVersion) && oldVersion != "-";
+            var hasNew = !string.IsNullOrEmpty(newVersion) && newVersion != "-";
+            if (hasOld && hasNew) return "v" + oldVersion + "  →  v" + newVersion;
+            if (hasNew) return "Updating to v" + newVersion;
+            return null;
+        }
+
+        private static string Size(long bytes)
+        {
+            if (bytes >= 1L << 30) return (bytes / (double)(1L << 30)).ToString("0.00", CultureInfo.InvariantCulture) + " GB";
+            return (bytes / (double)(1L << 20)).ToString("0", CultureInfo.InvariantCulture) + " MB";
+        }
+
+        private static void OpenLog()
+        {
+            try
+            {
+                var path = UpdateLog.Path;
+                if (path != null && File.Exists(path))
+                {
+                    Process.Start(new ProcessStartInfo("explorer.exe", "/select,\"" + path + "\"") { UseShellExecute = true });
+                }
+            }
+            catch
+            {
+            }
         }
 
         #region Properties
@@ -69,32 +104,68 @@ namespace Ravenfall.Updater.ViewModels
             set => Set(ref message, value);
         }
 
+        public string Detail
+        {
+            get => detail;
+            set => Set(ref detail, value);
+        }
+
         public float UpdateProgress
         {
             get => updateProgress;
             set => Set(ref updateProgress, value);
         }
 
-        public string NewVersionName
+        public string ProgressText
         {
-            get => newVersionName;
-            set => Set(ref newVersionName, value);
+            get => progressText;
+            set => Set(ref progressText, value);
         }
 
-        public string OldVersionName
+        public string VersionText
         {
-            get => oldVersionName;
-            set => Set(ref oldVersionName, value);
+            get => versionText;
+            set => Set(ref versionText, value);
+        }
+
+        public bool IsFailed
+        {
+            get => isFailed;
+            set => Set(ref isFailed, value);
+        }
+
+        public bool IsDone
+        {
+            get => isDone;
+            set => Set(ref isDone, value);
         }
 
         #endregion
 
         public static MainViewModel DesignInstance => new MainViewModel(null, null)
         {
-            Message = "Test",
-            UpdateProgress = 46f,
-            NewVersionName = "1.0f",
-            OldVersionName = "0.9b"
+            Message = "Installing...",
+            Detail = @"Ravenfall_Data\sharedassets1.assets.resS",
+            UpdateProgress = 62f,
+            ProgressText = "62%   1.36 GB of 2.20 GB",
+            VersionText = "v0.9.5.0a  →  v0.9.5.1a"
         };
+    }
+
+    /// <summary>A command that runs an action.</summary>
+    public sealed class RelayCommand : ICommand
+    {
+        private readonly Action action;
+
+        public RelayCommand(Action action)
+        {
+            this.action = action;
+        }
+
+        public event EventHandler CanExecuteChanged { add { } remove { } }
+
+        public bool CanExecute(object parameter) => true;
+
+        public void Execute(object parameter) => action?.Invoke();
     }
 }
